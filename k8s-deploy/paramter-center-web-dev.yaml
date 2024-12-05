@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: parameter-center-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: parameter-center-web
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: parameter-center-web
+    spec:
+      containers:
+        - name: parameter-center-web
+          image: { IMAGE_ID }
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 0.1
+              memory: 1024Mi
+            limits:
+              cpu: 1
+              memory: 4Gi
+          volumeMounts:
+            - mountPath: /var/log/nginx
+              name: log
+          livenessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+      volumes:
+        - name: log
+          hostPath:
+            path: /data/app-logs/parameter-center-web/log
+            type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: parameter-center-web-svc
+  labels:
+    app: parameter-center-web
+spec:
+  selector:
+    app: parameter-center-web
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      name: port1
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    # backoffice不再通过mx-vpn访问，设置集群内访问。老的external-lb没有改名称，仍会保留保证兼容。
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:565555147445:certificate/ea4235f6-c64e-4b5e-a1d9-af986673e635
+  labels:
+    app: parameter-center-web
+  name: parameter-center-web-lb
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: parameter-center-web-svc
+                port:
+                  number: 80
