@@ -19,16 +19,18 @@
                             <el-button size="small" circle
                                 @click="showAddNodeDialog = true; addFrom.key = ''; addFrom.value = ''"
                                 style="margin: 0;">+</el-button>
-                            <el-popover :visible="node.data.visible===true" placement="top" :width="200">
+                            <el-popover :visible="node.data.visible === true" placement="top" :width="200">
                                 <p>Are you sure to delete this?</p>
                                 <div style="text-align: right; margin: 0">
                                     <el-button size="small" text @click="node.data.visible = false">cancel</el-button>
-                                    <el-button size="small" type="primary" @click="node.data.visible = false; removeNode()">
+                                    <el-button size="small" type="primary"
+                                        @click="node.data.visible = false; removeNode()">
                                         confirm
                                     </el-button>
                                 </div>
                                 <template #reference>
-                                    <el-button size="small" @click="node.data.visible = true" circle style="margin: 0;">x</el-button>
+                                    <el-button size="small" @click="node.data.visible = true" circle
+                                        style="margin: 0;">x</el-button>
                                 </template>
                             </el-popover>
 
@@ -66,41 +68,46 @@
                                         node.data.key }}</span>
                             </span>
                             <el-input style="width: 60%;" v-if="node.data.edit" :ref='node.data.key'
-                                v-model="node.data.keyt" @blur="handleInputBlur" @keydown.enter="handleInputBlur" size="small" autosize />
+                                v-model="node.data.keyt" @blur="handleInputBlur" @keydown.enter="handleInputBlur"
+                                size="small" autosize />
                         </div>
 
                         <!-- show param key -->
                         <div v-if="node.data.type === 'Param'"
                             style="word-wrap: break-word; overflow-wrap: break-word;">
-                            <el-popover :visible="node.data.visible===true" placement="top" :width="200">
+                            <el-popover :visible="node.data.visible === true" placement="top" :width="200">
                                 <p>Are you sure to delete this?</p>
                                 <div style="text-align: right; margin: 0">
                                     <el-button size="small" text @click="node.data.visible = false">cancel</el-button>
-                                    <el-button size="small" type="primary" @click="node.data.visible = false; removeNode()">
+                                    <el-button size="small" type="primary"
+                                        @click="node.data.visible = false; removeNode()">
                                         confirm
                                     </el-button>
                                 </div>
                                 <template #reference>
-                                    <el-button size="small" @click="node.data.visible = true" circle style="margin: 0;">x</el-button>
+                                    <el-button size="small" @click="node.data.visible = true" circle
+                                        style="margin: 0;">x</el-button>
                                 </template>
-                            </el-popover>                            
+                            </el-popover>
                             <span v-show="!node.data.edit">
                                 <span style="font-weight: 400;"
                                     @click="node.data.keyt = node.data.key; node.data.edit = true; focus(node.data.key)">{{
                                         node.data.key }}</span>
                             </span>
                             <el-input style="width: 80%;" v-show="node.data.edit" :ref='node.data.key'
-                                v-model="node.data.keyt" @blur="handleInputBlur" @keydown.enter="handleInputBlur" size="small" autosize />
+                                v-model="node.data.keyt" @blur="handleInputBlur" @keydown.enter="handleInputBlur"
+                                size="small" autosize />
                         </div>
                     </el-col>
 
                     <!-- show the value -->
                     <el-col :span="14">
-                        <el-input v-if="node.data.type === 'Param'" v-model="node.data.value" type="textarea" autosize />
+                        <el-input v-if="node.data.type === 'Param'" v-model="node.data.value" type="textarea"
+                            autosize />
                     </el-col>
                 </el-row>
                 <editParam v-if="!node.data.hide" v-for="nodeChildren in node.children" :node="nodeChildren"
-                    :children="node.children" />
+                    :children="node.children" :globalFold="globalFold" />
             </li>
         </el-form>
     </ul>
@@ -175,7 +182,15 @@ export default {
             }
             this.node.data.edit = false;
         },
-
+        syncChildrenFold(children, fold) {
+            if (!children || children.length === 0) return;
+            children.forEach((child) => {
+                child.data.hide = fold;
+                if (child.children) {
+                    this.syncChildrenFold(child.children, fold);
+                }
+            });
+        },
     },
     props: {
         node: {
@@ -185,8 +200,20 @@ export default {
         children: {
             type: Array,
             default: []
-        }
-    }
+        },
+        globalFold: {
+            type: Boolean,
+            default: false
+        },
+    },
+    watch: {
+        globalFold(newVal) {
+            if (newVal !== null) {
+                this.node.data.hide = newVal;
+                this.syncChildrenFold(this.node.children, newVal);
+            }
+        },
+    },
 }
 </script>
 

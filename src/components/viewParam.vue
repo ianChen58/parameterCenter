@@ -17,24 +17,25 @@
                                 </svg>
                             </el-button>
 
-                            <span>{{node.data.key }}</span>
+                            <span>{{ node.data.key }}</span>
                         </div>
 
                         <!-- show param key -->
-                        <div v-if="node.data.type === 'Param'" style="word-wrap: break-word; overflow-wrap: break-word;">
-                            <span>{{node.data.key }}</span>
+                        <div v-if="node.data.type === 'Param'"
+                            style="word-wrap: break-word; overflow-wrap: break-word;">
+                            <span>{{ node.data.key }}</span>
                         </div>
                     </el-col>
 
                     <!-- show the value -->
                     <el-col :span="14">
                         <div v-if="node.data.value" class="value-show">
-                            {{node.data.value}}
+                            {{ node.data.value }}
                         </div>
                     </el-col>
                 </el-row>
                 <viewParam v-if="!node.data.hide" v-for="nodeChildren in node.children" :node="nodeChildren"
-                    :children="node.children" />
+                    :children="node.children" :globalFold="globalFold" />
             </li>
         </el-form>
     </ul>
@@ -51,7 +52,30 @@ export default {
         children: {
             type: Array,
             default: []
+        },
+        globalFold: {
+            type: Boolean,
+            default: false
         }
+    },
+    watch: {
+        globalFold(newVal) {
+            if (newVal !== null) {
+                this.node.data.hide = newVal;
+                this.syncChildrenFold(this.node.children, newVal);
+            }
+        },
+    },
+    methods: {
+        syncChildrenFold(children, fold) {
+            if (!children || children.length === 0) return;
+            children.forEach((child) => {
+                child.data.hide = fold;
+                if (child.children) {
+                    this.syncChildrenFold(child.children, fold);
+                }
+            });
+        },
     }
 }
 </script>
@@ -62,6 +86,7 @@ svg {
     width: 1em;
     color: black;
 }
+
 .value-show {
     overflow-wrap: break-word;
     /* border: 1px solid #ccc; */

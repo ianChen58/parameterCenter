@@ -21,31 +21,31 @@
                         <div v-if="node.type !== 'Map'" style="overflow-wrap: break-word;">
                             <span>{{ node.name }}</span>
                         </div>
-                        
+
                     </el-col>
 
                     <!-- show the value -->
                     <el-col :span="3">
-                        <div v-if="node.type !== 'Map' " class="value-show">{{ node.defaultValue }}</div>
+                        <div v-if="node.type !== 'Map'" class="value-show">{{ node.defaultValue }}</div>
                     </el-col>
                     <el-col :span="3">
-                        <div v-if="node.type !== 'Map' " class="value-show">{{ node.allowed }}</div>
+                        <div v-if="node.type !== 'Map'" class="value-show">{{ node.allowed }}</div>
                     </el-col>
                     <el-col :span="3">
-                        <div v-if="node.type !== 'Map' " class="value-show">{{ node.requiredOnSigning }}</div>
+                        <div v-if="node.type !== 'Map'" class="value-show">{{ node.requiredOnSigning }}</div>
                     </el-col>
                     <el-col :span="3">
-                        <div v-if="node.type !== 'Map' " class="value-show">{{ node.scope }}</div>
+                        <div v-if="node.type !== 'Map'" class="value-show">{{ node.scope }}</div>
                     </el-col>
                     <el-col :span="3">
-                        <div v-if="node.type !== 'Map' " class="value-show">{{ node.type }}</div>
+                        <div v-if="node.type !== 'Map'" class="value-show">{{ node.type }}</div>
                     </el-col>
                     <el-col :span="3">
-                        <div v-if="node.type !== 'Map' " class="value-show">{{ node.parent }}</div>
+                        <div v-if="node.type !== 'Map'" class="value-show">{{ node.parent }}</div>
                     </el-col>
                 </el-row>
                 <viewTemplate v-if="!node.hide" v-for="nodeChildren in node.children" :node="nodeChildren"
-                    :children="node.children" />
+                    :children="node.children" :globalFold="globalFold" />
             </li>
         </el-form>
     </ul>
@@ -62,7 +62,30 @@ export default {
         children: {
             type: Array,
             default: []
+        },
+        globalFold: {
+            type: Boolean,
+            default: false
         }
+    },
+    watch: {
+        globalFold(newVal) {
+            if (newVal !== null) {
+                this.node.hide = newVal;
+                this.syncChildrenFold(this.node.children, newVal);
+            }
+        },
+    },
+    methods: {
+        syncChildrenFold(children, fold) {
+            if (!children || children.length === 0) return;
+            children.forEach((child) => {
+                child.hide = fold;
+                if (child.children) {
+                    this.syncChildrenFold(child.children, fold);
+                }
+            });
+        },
     }
 }
 </script>
@@ -73,6 +96,7 @@ svg {
     width: 1em;
     color: black;
 }
+
 .value-show {
     overflow-wrap: break-word;
     /* border: 1px solid #ccc; */

@@ -141,7 +141,7 @@
 
                 </el-row>
                 <editTemplate v-if="!node.hide" v-for="nodeChildren in node.children" :node="nodeChildren"
-                    :children="node.children" />
+                    :children="node.children" :globalFold="globalFold" />
             </li>
         </el-form>
     </ul>
@@ -237,7 +237,15 @@ export default {
             }
             this.node.edit = false;
         },
-
+        syncChildrenFold(children, fold) {
+            if (!children || children.length === 0) return;
+            children.forEach((child) => {
+                child.hide = fold;
+                if (child.children) {
+                    this.syncChildrenFold(child.children, fold);
+                }
+            });
+        },
     },
     props: {
         node: {
@@ -247,8 +255,20 @@ export default {
         children: {
             type: Array,
             default: []
+        },
+        globalFold: {
+            type: Boolean,
+            default: false
         }
-    }
+    },
+    watch: {
+        globalFold(newVal) {
+            if (newVal !== null) {
+                this.node.hide = newVal;
+                this.syncChildrenFold(this.node.children, newVal);
+            }
+        },
+    },
 }
 </script>
 

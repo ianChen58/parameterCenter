@@ -1,7 +1,7 @@
 <template>
     <div>
-        <el-backtop :right="100" :bottom="30">▲</el-backtop>
-        <el-backtop :bottom="30" @click="scrollToBottom">▼</el-backtop>
+        <el-backtop :right="60" :bottom="10">▲</el-backtop>
+        <el-backtop :right="10" :bottom="10" @click="scrollToBottom">▼</el-backtop>
         <el-button @click="toMain">Go Back</el-button>
         <h1>Product Details</h1>
         <el-form :model="productInfo" label-width="200px">
@@ -46,8 +46,31 @@
             </el-form-item>
         </el-form>
         <el-divider />
-        <h1>Product Template</h1>
-        <el-button size="small" @click="showAddNodeDialog = true" circle style="margin: 0;">+</el-button>
+
+        <!-- h1 header -->
+        <el-row>
+            <el-col>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <el-button size="large" text @click="templateExpand = !templateExpand"
+                        style="margin: 0; padding: 5px; ">
+                        <svg v-if="!templateExpand" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path
+                                d="m14.707 12.707-4 4a1 1 0 0 1-1.414-1.414L12.586 12 9.293 8.707a1 1 0 1 1 1.414-1.414l4 4a1 1 0 0 1 0 1.414z" />
+                        </svg>
+                        <svg v-if="templateExpand" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path
+                                d="M12 15a1 1 0 0 1-.707-.293l-4-4a1 1 0 1 1 1.414-1.414L12 12.586l3.293-3.293a1 1 0 0 1 1.414 1.414l-4 4A1 1 0 0 1 12 15z" />
+                        </svg>
+                    </el-button>
+                    <h1 style="display: inline;">Product Template</h1>
+                    <el-button v-if="templateExpand" @click="this.templateNodeFold = true">Fold</el-button>
+                    <el-button v-if="templateExpand" @click="this.templateNodeFold = false">Unfold</el-button>
+                </div>
+            </el-col>
+        </el-row>
+
+        <el-button v-if="templateExpand" size="small" @click="showAddNodeDialog = true" circle
+            style="margin: 0;">+</el-button>
         <!-- add a new node dialog -->
         <el-dialog title="Add New Template" v-model="showAddNodeDialog" center>
             <el-form :model="addFrom">
@@ -89,11 +112,36 @@
                 </div>
             </template>
         </el-dialog>
-        <editTemplate v-for="node in templateTree" :node="node" :children="templateTree"></editTemplate>
+        <editTemplate v-if="templateExpand" v-for="node in templateTree" :node="node" :children="templateTree"
+            :globalFold="templateNodeFold">
+        </editTemplate>
         <el-divider />
 
-        <h1>Product Parameters</h1>
-        <editParam v-for="node in roots" :node="node" :children="roots"></editParam>
+        <!-- h1 header -->
+        <el-row>
+            <el-col>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <el-button size="large" text @click="parameterExpand = !parameterExpand"
+                        style="margin: 0; padding: 5px; ">
+                        <svg v-if="!parameterExpand" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path
+                                d="m14.707 12.707-4 4a1 1 0 0 1-1.414-1.414L12.586 12 9.293 8.707a1 1 0 1 1 1.414-1.414l4 4a1 1 0 0 1 0 1.414z" />
+                        </svg>
+                        <svg v-if="parameterExpand" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path
+                                d="M12 15a1 1 0 0 1-.707-.293l-4-4a1 1 0 1 1 1.414-1.414L12 12.586l3.293-3.293a1 1 0 0 1 1.414 1.414l-4 4A1 1 0 0 1 12 15z" />
+                        </svg>
+                    </el-button>
+                    <h1 style="display: inline;">Product Parameters</h1>
+                    <el-button v-if="parameterExpand" @click="this.parameterNodeFold = true">Fold</el-button>
+                    <el-button v-if="parameterExpand" @click="this.parameterNodeFold = false">Unfold</el-button>
+                </div>
+            </el-col>
+        </el-row>
+
+        <editParam v-if="parameterExpand" v-for="node in roots" :node="node" :children="roots"
+            :globalFold="parameterNodeFold">
+        </editParam>
         <el-button @click="exportSQL">Export SQL File</el-button>
         <el-button @click="exportJson">Export JSON File</el-button>
     </div>
@@ -144,6 +192,10 @@ export default {
             commonMappingData: [],
             commonGroupData: [],
             templateData: [],
+            templateNodeFold: false,
+            templateExpand: true,
+            parameterNodeFold: false,
+            parameterExpand: true,
         };
     },
     mounted() {
@@ -9529,4 +9581,10 @@ export default {
     },
 };
 </script>
-<style scoped></style>
+<style scoped>
+svg {
+    height: 1em;
+    width: 1em;
+    color: black;
+}
+</style>
