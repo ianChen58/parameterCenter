@@ -103,17 +103,18 @@
                     <!-- show the value -->
                     <el-col :span="14">
                         <el-input v-if="node.data.type === 'Param'" v-model="node.data.value" type="textarea"
-                            autosize />
+                            @focus="node.data.oldValue = node.data.value" @blur="validateValue" autosize />
                     </el-col>
                 </el-row>
                 <editParam v-if="!node.data.hide" v-for="nodeChildren in node.children" :node="nodeChildren"
-                    :children="node.children" :globalFold="globalFold" />
+                    :children="node.children" :globalFold="globalFold" :templateAllowedMap="templateAllowedMap" />
             </li>
         </el-form>
     </ul>
 </template>
 
 <script>
+import allowedChecker from '@/utils/allowedChecker';
 
 export default {
     data() {
@@ -125,6 +126,12 @@ export default {
             },
             showAddNodeDialog: false,
         };
+    },
+    mounted() {
+        // allowedChecker("(1,4]", "4");
+        // allowedChecker("{one,two,three}", "one");
+
+        // allowedChecker("/\\d{18}/", "111111111111111111");
     },
     methods: {
         addNode(key, value, type) {
@@ -153,7 +160,6 @@ export default {
             this.$message.success('Node removed successfully!');
         },
         focus(key) {
-            console.log(key, 'focus')
             let _this = this
             setTimeout(function () {
                 _this.$refs[key].focus();
@@ -191,6 +197,26 @@ export default {
                 }
             });
         },
+        validateValue() {
+            const nodeData = this.templateAllowedMap.get(this.node.data.key);
+            const allowed = nodeData?.allowed;
+            const nodeType = nodeData?.type;
+            let inRange = false;
+            if (allowed) {
+                inRange = allowedChecker(allowed, this.node.data.value);
+                console.log(`allowed range: ${allowed}, passed: ${inRange}`)
+                if (inRange) {
+                    this.node.data.oldValue = this.node.data.value;
+                    return;
+                } else {
+                    this.$message.error(
+                        `Invalid value! Allowed values for ${this.node.data.key} are: ${allowed}`
+                    );
+                    this.node.data.value = this.node.data.oldValue;
+                    return;
+                }
+            }
+        }
     },
     props: {
         node: {
@@ -204,6 +230,10 @@ export default {
         globalFold: {
             type: Boolean,
             default: false
+        },
+        templateAllowedMap: {
+            type: Map,
+            default: {}
         },
     },
     watch: {

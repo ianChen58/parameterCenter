@@ -1,5 +1,6 @@
 <template>
     <div>
+        {{ templateAllowedMap }}
         <el-backtop :right="60" :bottom="10">▲</el-backtop>
         <el-backtop :right="10" :bottom="10" @click="scrollToBottom">▼</el-backtop>
         <el-button @click="toMain">Go Back</el-button>
@@ -140,7 +141,7 @@
         </el-row>
 
         <editParam v-if="parameterExpand" v-for="node in roots" :node="node" :children="roots"
-            :globalFold="parameterNodeFold">
+            :globalFold="parameterNodeFold" :templateAllowedMap="templateAllowedMap">
         </editParam>
         <el-button @click="exportSQL">Export SQL File</el-button>
         <el-button @click="exportJson">Export JSON File</el-button>
@@ -9579,6 +9580,24 @@ export default {
             this.$message.success('Node add successfully!');
         },
     },
+    computed: {
+        templateAllowedMap() {
+            const map = new Map();
+            const buildMap = (node) => {
+                if (node.scope === 'Product') {
+                    map.set(node.name, {
+                        allowed: node.allowed,
+                        type: node.type,
+                    });
+                }
+                if (node.children) {
+                    node.children.forEach(buildMap);
+                }
+            };
+            this.templateTree.forEach(buildMap);
+            return map;
+        }
+    }
 };
 </script>
 <style scoped>
